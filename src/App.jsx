@@ -6,6 +6,7 @@ import { RiAddLargeLine } from "react-icons/ri";
 import { MdEdit, MdDelete } from "react-icons/md";
 
 const App = ({ product = [] }) => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({
     nama_barang: "",
@@ -15,7 +16,6 @@ const App = ({ product = [] }) => {
     jenis_barang: "",
   });
   const [editingId, setEditingId] = useState(null);
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, "");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
