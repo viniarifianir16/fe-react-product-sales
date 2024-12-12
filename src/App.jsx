@@ -18,6 +18,8 @@ const App = ({ product = [] }) => {
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
 
   // Show Data
   const fetchData = async () => {
@@ -183,6 +185,18 @@ const App = ({ product = [] }) => {
     );
   });
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalItems = filteredData.length; // Total item berdasarkan filtered data
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Fungsi untuk mengubah halaman
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <>
       <div className="m-2">
@@ -206,12 +220,6 @@ const App = ({ product = [] }) => {
                 </p>
               </div>
               <div className="flex flex-col gap-2 shrink-0 sm:flex-row">
-                <button
-                  className="select-none rounded-lg border border-gray-900 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-gray-900 transition-all hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                  type="button"
-                >
-                  View all
-                </button>
                 <button
                   className="flex select-none items-center gap-3 rounded-lg bg-gray-900 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-gray-900/10 transition-all hover:shadow-lg hover:shadow-gray-900/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                   type="button"
@@ -329,9 +337,9 @@ const App = ({ product = [] }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredData && filteredData.length > 0 ? (
+                {currentItems && currentItems.length > 0 ? (
                   Array.isArray(product) &&
-                  filteredData.map((item, index) => (
+                  currentItems.map((item, index) => (
                     <tr key={item.id}>
                       <td className="p-4 border-b border-blue-gray-50">
                         <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
@@ -417,24 +425,55 @@ const App = ({ product = [] }) => {
           </div>
           <div className="flex justify-between items-center px-4 py-3">
             <div className="text-sm text-slate-500">
-              Showing <b>1-5</b> of 45
+              Showing{" "}
+              <b>
+                {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, totalItems)}
+              </b>{" "}
+              of {totalItems}
             </div>
-            <div className="flex space-x-1">
-              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-                Prev
-              </button>
-              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-white bg-slate-800 border border-slate-800 rounded hover:bg-slate-600 hover:border-slate-600 transition duration-200 ease">
-                1
-              </button>
-              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-                2
-              </button>
-              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-                3
-              </button>
-              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-                Next
-              </button>
+            <div className="flex justify-between items-center px-4 py-3">
+              {/* <div className="text-sm text-slate-500">
+                Showing{" "}
+                <b>
+                  {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, totalItems)}
+                </b>{" "}
+                of {totalItems}
+              </div> */}
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease ${
+                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  Prev
+                </button>
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handlePageChange(index + 1)}
+                    className={`px-3 py-1 min-w-9 min-h-9 text-sm font-normal ${
+                      currentPage === index + 1
+                        ? "text-white bg-slate-800"
+                        : "text-slate-500 bg-white"
+                    } border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease ${
+                    currentPage === totalPages
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>
