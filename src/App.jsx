@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { RiAddLargeLine } from "react-icons/ri";
 import { MdEdit, MdDelete } from "react-icons/md";
+import { FaSortUp, FaSortDown } from "react-icons/fa";
 
 const App = ({ product = [] }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -20,6 +21,10 @@ const App = ({ product = [] }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
+  const [sortConfig, setSortConfig] = useState({
+    key: "nama_barang",
+    direction: "ascending",
+  });
 
   // Show Data
   const fetchData = async () => {
@@ -168,7 +173,7 @@ const App = ({ product = [] }) => {
     setIsModalOpen(false);
   };
 
-  // Search Input
+  // Search input
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -185,14 +190,33 @@ const App = ({ product = [] }) => {
     );
   });
 
+  // Sorting
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (a[sortConfig.key] < b[sortConfig.key]) {
+      return sortConfig.direction === "ascending" ? -1 : 1;
+    }
+    if (a[sortConfig.key] > b[sortConfig.key]) {
+      return sortConfig.direction === "ascending" ? 1 : -1;
+    }
+    return 0;
+  });
+
+  const requestSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalItems = filteredData.length; // Total item berdasarkan filtered data
+  const currentItems = sortedData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalItems = sortedData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Fungsi untuk mengubah halaman
+  // Ganti halaman
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -304,29 +328,84 @@ const App = ({ product = [] }) => {
                       No
                     </p>
                   </th>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                  <th
+                    onClick={() => requestSort("nama_barang")}
+                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                  >
+                    <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
                       Nama Barang
+                      <div className="ml-2">
+                        {sortConfig.key === "nama_barang" &&
+                          (sortConfig.direction === "ascending" ? (
+                            <FaSortUp />
+                          ) : (
+                            <FaSortDown />
+                          ))}
+                      </div>
                     </p>
                   </th>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                  <th
+                    onClick={() => requestSort("stok")}
+                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                  >
+                    <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
                       Stok
+                      <div className="ml-2">
+                        {sortConfig.key === "stok" &&
+                          (sortConfig.direction === "ascending" ? (
+                            <FaSortUp />
+                          ) : (
+                            <FaSortDown />
+                          ))}
+                      </div>
                     </p>
                   </th>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
+                  <th
+                    onClick={() => requestSort("jumlah_terjual")}
+                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                  >
                     <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                      <div className="ml-2">
+                        {sortConfig.key === "jumlah_terjual" &&
+                          (sortConfig.direction === "ascending" ? (
+                            <FaSortUp />
+                          ) : (
+                            <FaSortDown />
+                          ))}
+                      </div>
                       Jumlah Terjual
                     </p>
                   </th>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
+                  <th
+                    onClick={() => requestSort("tanggal_transaksi")}
+                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                  >
                     <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                      <div className="ml-2">
+                        {sortConfig.key === "tanggal_transaksi" &&
+                          (sortConfig.direction === "ascending" ? (
+                            <FaSortUp />
+                          ) : (
+                            <FaSortDown />
+                          ))}
+                      </div>
                       Tanggal Transaksi
                     </p>
                   </th>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
+                  <th
+                    onClick={() => requestSort("jenis_barang")}
+                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                  >
                     <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
                       Jenis Barang
+                      <div className="ml-2">
+                        {sortConfig.key === "jenis_barang" &&
+                          (sortConfig.direction === "ascending" ? (
+                            <FaSortUp />
+                          ) : (
+                            <FaSortDown />
+                          ))}
+                      </div>
                     </p>
                   </th>
                   <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
@@ -389,7 +468,7 @@ const App = ({ product = [] }) => {
                           onClick={() => handleEdit(item)}
                         >
                           <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                            <MdEdit />
+                            <MdEdit className="text-lg" />
                           </span>
                         </button>
                         <button
@@ -405,7 +484,7 @@ const App = ({ product = [] }) => {
                           }}
                         >
                           <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                            <MdDelete />
+                            <MdDelete className="text-lg" />
                           </span>
                         </button>
                       </td>
