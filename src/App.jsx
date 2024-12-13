@@ -229,11 +229,18 @@ const App = ({ product = [] }) => {
 
   // Mengelompokkan data
   const groupedData = currentItems.reduce((acc, compare) => {
-    const { jenis_barang, jumlah_terjual } = compare;
-    if (!acc[jenis_barang]) {
-      acc[jenis_barang] = 0;
+    if (
+      compare &&
+      compare.jenis_barang &&
+      typeof compare.jumlah_terjual === "number"
+    ) {
+      const { jenis_barang, jumlah_terjual } = compare;
+
+      if (!acc[jenis_barang]) {
+        acc[jenis_barang] = 0;
+      }
+      acc[jenis_barang] += jumlah_terjual;
     }
-    acc[jenis_barang] += jumlah_terjual;
     return acc;
   }, {});
 
@@ -241,6 +248,9 @@ const App = ({ product = [] }) => {
   const sortData = Object.entries(groupedData)
     .map(([jenis_barang, total_terjual]) => ({ jenis_barang, total_terjual }))
     .sort((a, b) => b.total_terjual - a.total_terjual);
+
+  // Jika Anda ingin melihat hasilnya
+  console.log("Sorted Data:", sortData);
 
   // Ganti tab
   const handleTabChange = (tab) => {
