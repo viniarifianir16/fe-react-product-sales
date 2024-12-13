@@ -9,12 +9,13 @@ import { FaSortUp, FaSortDown } from "react-icons/fa";
 const App = ({ product = [] }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [data, setData] = useState([]);
+  const [dataCategory, setDataCategory] = useState([]);
   const [formData, setFormData] = useState({
     nama_barang: "",
     stok: "",
     jumlah_terjual: "",
     tanggal_transaksi: "",
-    jenis_barang: "",
+    category_id: "",
   });
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,10 +31,16 @@ const App = ({ product = [] }) => {
   // Show Data
   const fetchData = async () => {
     console.log("Fetching from:", `${BASE_URL}/product`);
+    console.log("Fetching from:", `${BASE_URL}/category`);
     try {
-      const response = await axios.get(`${BASE_URL}/product`);
+      const [response, response2] = await Promise.all([
+        axios.get(`${BASE_URL}/product`),
+        axios.get(`${BASE_URL}/category`),
+      ]);
       console.log("Response data:", response.data);
+      console.log("Response data:", response2.data);
       setData(response.data);
+      setDataCategory(response2.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -53,7 +60,7 @@ const App = ({ product = [] }) => {
       !formData.stok ||
       !formData.jumlah_terjual ||
       !formData.tanggal_transaksi ||
-      !formData.jenis_barang
+      !formData.category_id
     ) {
       alert("Please fill in all required fields.");
       return;
@@ -64,7 +71,7 @@ const App = ({ product = [] }) => {
       stok: parseInt(formData.stok),
       jumlah_terjual: parseInt(formData.jumlah_terjual),
       tanggal_transaksi: formData.tanggal_transaksi,
-      jenis_barang: formData.jenis_barang,
+      category_id: parseInt(formData.category_id),
     };
 
     console.log("Submitting payload:", payload);
@@ -77,15 +84,13 @@ const App = ({ product = [] }) => {
         );
         console.log("Update response:", response);
         setEditingId(null);
-        alert("Update Data Succesfully.");
+        alert("Update product Succesfully.");
         closeModal();
       } catch (error) {
         if (error.response) {
           console.error("Error updating product:", error.response.data);
           alert(
-            `Error: ${
-              error.response.data.message || "Failed to delete product."
-            }`
+            `Error: ${error.response.data.message || "Failed to add product."}`
           );
         } else {
           console.error("Error updating product:", error.message);
@@ -96,14 +101,14 @@ const App = ({ product = [] }) => {
       try {
         const response = await axios.post(`${BASE_URL}/product`, payload);
         console.log("Create response:", response);
-        alert("Add Data Succesfully.");
+        alert("Add product Succesfully.");
+        fetchData();
+        closeModal();
       } catch (error) {
         if (error.response) {
           console.error("Error creating product:", error.response.data);
           alert(
-            `Error: ${
-              error.response.data.message || "Failed to delete product."
-            }`
+            `Error: ${error.response.data.message || "Failed to add product."}`
           );
         } else {
           console.error("Error creating product:", error.message);
@@ -118,7 +123,7 @@ const App = ({ product = [] }) => {
       stok: "",
       jumlah_terjual: "",
       tanggal_transaksi: "",
-      jenis_barang: "",
+      category_id: "",
     });
 
     fetchData();
@@ -187,7 +192,7 @@ const App = ({ product = [] }) => {
       item.stok.toString().includes(searchLower) ||
       item.jumlah_terjual.toString().includes(searchLower) ||
       item.tanggal_transaksi.toLowerCase().includes(searchLower) ||
-      item.jenis_barang.toLowerCase().includes(searchLower)
+      item.category.jenis_barang.toLowerCase().includes(searchLower)
     );
   });
 
@@ -223,8 +228,8 @@ const App = ({ product = [] }) => {
   };
 
   // Mengelompokkan data
-  const groupedData = currentItems.reduce((acc, currentItems) => {
-    const { jenis_barang, jumlah_terjual } = currentItems;
+  const groupedData = currentItems.reduce((acc, compare) => {
+    const { jenis_barang, jumlah_terjual } = compare;
     if (!acc[jenis_barang]) {
       acc[jenis_barang] = 0;
     }
@@ -307,17 +312,6 @@ const App = ({ product = [] }) => {
                       onClick={() => handleTabChange("perbandingan")}
                     >
                       <div className="z-20 mx-2 text-inherit">Perbandingan</div>
-                    </li>
-                    <li
-                      role="tab"
-                      className={`relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900 ${
-                        activeTab === "normalisasi"
-                          ? "bg-gray-100  rounded-md shadow"
-                          : "bg-transparent"
-                      } `}
-                      data-value="normalisasi"
-                    >
-                      <div className="z-20 mx-2 text-inherit">Normalisasi</div>
                     </li>
                   </ul>
                 </nav>
@@ -817,14 +811,22 @@ const App = ({ product = [] }) => {
                   <label className="block mb-1 text-sm text-slate-700 text-start">
                     Jenis Barang
                   </label>
-                  <input
-                    type="text"
-                    name="jenis_barang"
+                  <select
+                    name="category_id"
                     className="w-full h-10 bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md"
                     placeholder="Enter your text"
                     value={formData.jenis_barang}
                     onChange={handleInputChange}
-                  />
+                  >
+                    <option value="" disabled>
+                      Select an option
+                    </option>
+                    {dataCategory.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.jenis_barang}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="p-6 pt-0">
