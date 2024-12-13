@@ -25,6 +25,7 @@ const App = ({ product = [] }) => {
     key: "nama_barang",
     direction: "ascending",
   });
+  const [activeTab, setActiveTab] = useState("all");
 
   // Show Data
   const fetchData = async () => {
@@ -139,7 +140,7 @@ const App = ({ product = [] }) => {
       stok: product.stok,
       jumlah_terjual: product.jumlah_terjual,
       tanggal_transaksi: product.tanggal_transaksi,
-      jenis_barang: product.jenis_barang,
+      jenis_barang: product.category.jenis_barang,
     });
     setEditingId(product.id);
     setIsModalOpen(true);
@@ -221,12 +222,32 @@ const App = ({ product = [] }) => {
     setCurrentPage(pageNumber);
   };
 
+  // Mengelompokkan data
+  const groupedData = currentItems.reduce((acc, currentItems) => {
+    const { jenis_barang, jumlah_terjual } = currentItems;
+    if (!acc[jenis_barang]) {
+      acc[jenis_barang] = 0;
+    }
+    acc[jenis_barang] += jumlah_terjual;
+    return acc;
+  }, {});
+
+  // Mengurutkan data
+  const sortData = Object.entries(groupedData)
+    .map(([jenis_barang, total_terjual]) => ({ jenis_barang, total_terjual }))
+    .sort((a, b) => b.total_terjual - a.total_terjual);
+
+  // Ganti tab
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
   return (
     <>
-      <div className="m-2">
-        <h1 className="text-3xl text-center font-bold mb-2">Tokoku</h1>
+      <div className="m-2 mx-8">
+        <h1 className="text-3xl text-center font-bold mb-2">TokoAku</h1>
         <p className="font-normal text-gray-700 dark:text-gray-400 text-center">
-          Welcome to Tokoku
+          Welcome to TokoAku
         </p>
         <div className="block mb-2 mx-auto border-b border-slate-300 pb-2 max-w-[360px]">
           <p></p>
@@ -237,7 +258,7 @@ const App = ({ product = [] }) => {
             <div className="flex items-center justify-between gap-8 mb-8">
               <div>
                 <h5 className="block font-sans text-xl antialiased font-semibold leading-snug tracking-normal text-blue-gray-900">
-                  Product list
+                  Product List
                 </h5>
                 <p className="block mt-1 font-sans text-base antialiased font-normal leading-relaxed text-gray-700">
                   See information about all product
@@ -264,25 +285,39 @@ const App = ({ product = [] }) => {
                   >
                     <li
                       role="tab"
-                      className="relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900"
+                      className={`relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900 ${
+                        activeTab === "all"
+                          ? "bg-gray-100  rounded-md shadow"
+                          : "bg-transparent"
+                      } `}
                       data-value="all"
+                      onClick={() => handleTabChange("all")}
                     >
                       <div className="z-20 mx-2 w-10 text-inherit">All</div>
-                      <div className="absolute inset-0 z-10 h-full bg-white rounded-md shadow"></div>
+                      <div className="absolute inset-0 z-10 h-full"></div>
                     </li>
                     <li
                       role="tab"
-                      className="relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900"
-                      data-value="monitored"
+                      className={`relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900 ${
+                        activeTab === "perbandingan"
+                          ? "bg-gray-100  rounded-md shadow"
+                          : "bg-transparent"
+                      } `}
+                      data-value="perbandingan"
+                      onClick={() => handleTabChange("perbandingan")}
                     >
-                      <div className="z-20 mx-2 text-inherit">Monitored</div>
+                      <div className="z-20 mx-2 text-inherit">Perbandingan</div>
                     </li>
                     <li
                       role="tab"
-                      className="relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900"
-                      data-value="unmonitored"
+                      className={`relative flex items-center justify-center w-full h-full px-2 py-1 font-sans text-base antialiased font-normal leading-relaxed text-center bg-transparent cursor-pointer select-none text-blue-gray-900 ${
+                        activeTab === "normalisasi"
+                          ? "bg-gray-100  rounded-md shadow"
+                          : "bg-transparent"
+                      } `}
+                      data-value="normalisasi"
                     >
-                      <div className="z-20 mx-2 text-inherit">Unmonitored</div>
+                      <div className="z-20 mx-2 text-inherit">Normalisasi</div>
                     </li>
                   </ul>
                 </nav>
@@ -320,187 +355,339 @@ const App = ({ product = [] }) => {
             </div>
           </div>
           <div className="p-6 px-0 overflow-scroll mt-4">
-            <table className="w-full text-left table-auto min-w-max">
-              <thead className="bg-slate-50 border-slate-200">
-                <tr>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      No
-                    </p>
-                  </th>
-                  <th
-                    onClick={() => requestSort("nama_barang")}
-                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
-                  >
-                    <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      Nama Barang
-                      <div className="ml-2">
-                        {sortConfig.key === "nama_barang" &&
-                          (sortConfig.direction === "ascending" ? (
-                            <FaSortUp />
-                          ) : (
-                            <FaSortDown />
-                          ))}
-                      </div>
-                    </p>
-                  </th>
-                  <th
-                    onClick={() => requestSort("stok")}
-                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
-                  >
-                    <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      Stok
-                      <div className="ml-2">
-                        {sortConfig.key === "stok" &&
-                          (sortConfig.direction === "ascending" ? (
-                            <FaSortUp />
-                          ) : (
-                            <FaSortDown />
-                          ))}
-                      </div>
-                    </p>
-                  </th>
-                  <th
-                    onClick={() => requestSort("jumlah_terjual")}
-                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
-                  >
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      <div className="ml-2">
-                        {sortConfig.key === "jumlah_terjual" &&
-                          (sortConfig.direction === "ascending" ? (
-                            <FaSortUp />
-                          ) : (
-                            <FaSortDown />
-                          ))}
-                      </div>
-                      Jumlah Terjual
-                    </p>
-                  </th>
-                  <th
-                    onClick={() => requestSort("tanggal_transaksi")}
-                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
-                  >
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      <div className="ml-2">
-                        {sortConfig.key === "tanggal_transaksi" &&
-                          (sortConfig.direction === "ascending" ? (
-                            <FaSortUp />
-                          ) : (
-                            <FaSortDown />
-                          ))}
-                      </div>
-                      Tanggal Transaksi
-                    </p>
-                  </th>
-                  <th
-                    onClick={() => requestSort("jenis_barang")}
-                    className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
-                  >
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      Jenis Barang
-                      <div className="ml-2">
-                        {sortConfig.key === "jenis_barang" &&
-                          (sortConfig.direction === "ascending" ? (
-                            <FaSortUp />
-                          ) : (
-                            <FaSortDown />
-                          ))}
-                      </div>
-                    </p>
-                  </th>
-                  <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
-                    <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
-                      Action
-                    </p>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems && currentItems.length > 0 ? (
-                  Array.isArray(product) &&
-                  currentItems.map((item, index) => (
-                    <tr key={item.id}>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
-                          {index + 1}
+            {activeTab === "all" && (
+              <table className="w-full text-left table-auto min-w-max">
+                <thead className="bg-slate-50 border-slate-200">
+                  <tr>
+                    <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        No
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("nama_barang")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Nama Barang
+                        <div className="ml-2">
+                          {sortConfig.key === "nama_barang" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("stok")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Stok
+                        <div className="ml-2">
+                          {sortConfig.key === "stok" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("jumlah_terjual")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        <div className="ml-2">
+                          {sortConfig.key === "jumlah_terjual" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                        Jumlah Terjual
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("tanggal_transaksi")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        <div className="ml-2">
+                          {sortConfig.key === "tanggal_transaksi" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                        Tanggal Transaksi
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("jenis_barang")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Jenis Barang
+                        <div className="ml-2">
+                          {sortConfig.key === "jenis_barang" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                      </p>
+                    </th>
+                    <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Action
+                      </p>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems && currentItems.length > 0 ? (
+                    Array.isArray(product) &&
+                    currentItems.map((item, index) => (
+                      <tr key={item.id}>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                            {index + 1}
+                          </p>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="flex flex-col">
+                            <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                              {item.nama_barang}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="w-max">
+                            <div className="relative grid items-center px-2 py-1 font-sans text-xs font-bold text-green-900 uppercase rounded-md select-none whitespace-nowrap bg-yellow-500/20">
+                              <span className="">{item.stok}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="w-max">
+                            <div className="relative grid items-center px-2 py-1 font-sans text-xs font-bold text-green-900 uppercase rounded-md select-none whitespace-nowrap bg-green-500/20">
+                              <span className="">{item.jumlah_terjual}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="flex flex-col">
+                            <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                              {item.tanggal_transaksi}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="flex flex-col">
+                            <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                              {item.category.jenis_barang}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <button
+                            className="relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                            type="button"
+                            data-dialog-target="dialog"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+                              <MdEdit className="text-lg" />
+                            </span>
+                          </button>
+                          <button
+                            className="relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                            type="button"
+                            onClick={() => {
+                              const confirmDelete = window.confirm(
+                                "Are you sure you want to delete this item?"
+                              );
+                              if (confirmDelete) {
+                                handleDelete(item.id);
+                              }
+                            }}
+                          >
+                            <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+                              <MdDelete className="text-lg" />
+                            </span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center p-4 py-5">
+                        <p className="text-sm text-slate-500">
+                          No items in Product.
                         </p>
                       </td>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <div className="flex flex-col">
-                          <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
-                            {item.nama_barang}
-                          </p>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+            {activeTab === "perbandingan" && (
+              <table className="w-full text-left table-auto min-w-max">
+                <thead className="bg-slate-50 border-slate-200">
+                  <tr>
+                    <th className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50">
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        No
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("nama_barang")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Nama Barang
+                        <div className="ml-2">
+                          {sortConfig.key === "nama_barang" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
                         </div>
-                      </td>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <div className="w-max">
-                          <div className="relative grid items-center px-2 py-1 font-sans text-xs font-bold text-green-900 uppercase rounded-md select-none whitespace-nowrap bg-yellow-500/20">
-                            <span className="">{item.stok}</span>
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("stok")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="flex font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Stok
+                        <div className="ml-2">
+                          {sortConfig.key === "stok" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("jumlah_terjual")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        <div className="ml-2">
+                          {sortConfig.key === "jumlah_terjual" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                        Jumlah Terjual
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("tanggal_transaksi")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        <div className="ml-2">
+                          {sortConfig.key === "tanggal_transaksi" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                        Tanggal Transaksi
+                      </p>
+                    </th>
+                    <th
+                      onClick={() => requestSort("jenis_barang")}
+                      className="p-4 border-y border-blue-gray-100 bg-blue-gray-50/50 cursor-pointer"
+                    >
+                      <p className="block font-sans text-sm antialiased font-normal leading-none text-blue-gray-900 opacity-70">
+                        Jenis Barang
+                        <div className="ml-2">
+                          {sortConfig.key === "jenis_barang" &&
+                            (sortConfig.direction === "ascending" ? (
+                              <FaSortUp />
+                            ) : (
+                              <FaSortDown />
+                            ))}
+                        </div>
+                      </p>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortData && sortData.length > 0 ? (
+                    Array.isArray(product) &&
+                    sortData.map((item, index) => (
+                      <tr key={item.id}>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                            {index + 1}
+                          </p>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="flex flex-col">
+                            <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                              {item.nama_barang}
+                            </p>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <div className="w-max">
-                          <div className="relative grid items-center px-2 py-1 font-sans text-xs font-bold text-green-900 uppercase rounded-md select-none whitespace-nowrap bg-green-500/20">
-                            <span className="">{item.jumlah_terjual}</span>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="w-max">
+                            <div className="relative grid items-center px-2 py-1 font-sans text-xs font-bold text-green-900 uppercase rounded-md select-none whitespace-nowrap bg-yellow-500/20">
+                              <span className="">{item.stok}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <div className="flex flex-col">
-                          <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
-                            {item.tanggal_transaksi}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <div className="flex flex-col">
-                          <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
-                            {item.jenis_barang}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="p-4 border-b border-blue-gray-50">
-                        <button
-                          className="relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                          type="button"
-                          data-dialog-target="dialog"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                            <MdEdit className="text-lg" />
-                          </span>
-                        </button>
-                        <button
-                          className="relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-gray-900/10 active:bg-gray-900/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                          type="button"
-                          onClick={() => {
-                            const confirmDelete = window.confirm(
-                              "Are you sure you want to delete this item?"
-                            );
-                            if (confirmDelete) {
-                              handleDelete(item.id);
-                            }
-                          }}
-                        >
-                          <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                            <MdDelete className="text-lg" />
-                          </span>
-                        </button>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="w-max">
+                            <div className="relative grid items-center px-2 py-1 font-sans text-xs font-bold text-green-900 uppercase rounded-md select-none whitespace-nowrap bg-green-500/20">
+                              <span className="">{item.jumlah_terjual}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="flex flex-col">
+                            <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                              {item.tanggal_transaksi}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-4 border-b border-blue-gray-50">
+                          <div className="flex flex-col">
+                            <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                              {item.category.jenis_barang}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center p-4 py-5">
+                        <p className="text-sm text-slate-500">
+                          No items in Product.
+                        </p>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center p-4 py-5">
-                      <p className="text-sm text-slate-500">
-                        No items in Product.
-                      </p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
           <div className="flex justify-between items-center px-4 py-3">
             <div className="text-sm text-slate-500">
